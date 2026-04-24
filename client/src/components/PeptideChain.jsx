@@ -5,7 +5,7 @@ const PAD_X = 48
 const PAD_Y = 20
 const MIN_W = 400
 
-export default function PeptideChain({ chain }) {
+export default function PeptideChain({ chain, blocked = false }) {
   const aas = chain.filter(aa => !aa.space)
   const n = aas.length
 
@@ -32,12 +32,12 @@ export default function PeptideChain({ chain }) {
             x={svgW / 2}
             y={svgH / 2 + 6}
             textAnchor="middle"
-            fill="#c0bab2"
+            fill={blocked ? '#a26853' : '#c0bab2'}
             fontSize={14}
             fontFamily="Georgia, 'Times New Roman', serif"
             letterSpacing="2"
           >
-            start typing…
+            {blocked ? 'try a different word' : 'start typing…'}
           </text>
         ) : (
           <ConnectedChain

@@ -6,16 +6,24 @@ import VirtualKeyboard from './components/VirtualKeyboard'
 import ChainFooter from './components/ChainFooter'
 import PeptideTicker from './components/PeptideTicker'
 import { textToAminoAcids } from './lib/aminoAcids'
+import { containsProfanity } from './lib/contentFilter'
 
 const DEFAULT_WORD = 'PEPTIDE'
 
 export default function App() {
   const [inputText, setInputText] = useState(DEFAULT_WORD)
   const [chain,     setChain]     = useState(() => textToAminoAcids(DEFAULT_WORD))
+  const [blocked,   setBlocked]   = useState(false)
 
   function handleInput(text) {
     setInputText(text)
-    setChain(textToAminoAcids(text))
+    if (containsProfanity(text)) {
+      setBlocked(true)
+      setChain([])
+    } else {
+      setBlocked(false)
+      setChain(textToAminoAcids(text))
+    }
   }
 
   const hasChain = chain.length > 0
@@ -59,7 +67,7 @@ export default function App() {
 
           {/* Chain output — always visible; sits above the keyboard like paper in a typewriter */}
           <div className="relative w-full">
-            <PeptideChain chain={chain} />
+            <PeptideChain chain={chain} blocked={blocked} />
             {hasChain && (
               <div className="absolute top-2 right-4">
                 <ExportButton />
