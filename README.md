@@ -12,7 +12,7 @@ Getting that kind of artwork designed usually means commissioning it or wrestlin
 
 ## Live demo
 
-Deployed on Cloudflare Pages: **[peptattoo.pages.dev](https://peptattoo.pages.dev)** *(once the first build goes green)*
+**[peptide-tattoo.com](https://peptide-tattoo.com)**
 
 ## What it does
 
@@ -103,28 +103,43 @@ npm run lint       # eslint
 ## Repository layout
 
 ```
-/client           # The entire application
+/client              # The entire application
   /src
-    /components   # React components (PeptideChain, VirtualKeyboard, TattooPreview, …)
-    /lib          # Amino-acid data, content filter, shared disclaimer JSX
-  /public         # Static assets served as-is
-/.husky           # Git pre-commit hooks (runs client tests)
-CLAUDE.md         # Guidance for Claude Code when working in this repo
+    /components      # React components (PeptideChain, VirtualKeyboard, TattooPreview, …)
+    /lib             # Amino-acid data, content filter, shared disclaimer JSX
+  /public            # Static assets served as-is
+  wrangler.jsonc     # Cloudflare Workers deploy config (static assets only)
+/.husky              # Git pre-commit hooks (runs client tests)
+CLAUDE.md            # Guidance for Claude Code when working in this repo
 ```
 
 ## Deployment
 
-The site is hosted on **Cloudflare Pages**, deploying automatically on every push to `master`. Build config:
+The site is hosted on **Cloudflare Workers** with static assets at [peptide-tattoo.com](https://peptide-tattoo.com). The `client/wrangler.jsonc` config points Workers at the Vite build output (`./dist`) and marks the site as a single-page-application for 404 handling.
+
+To deploy manually from a local checkout:
+
+```bash
+cd client
+npm install
+npm run build
+npx wrangler login          # one-time
+npx wrangler deploy
+```
+
+CI auto-deploy on push is wired via Cloudflare's GitHub App (Workers Builds). Build settings in the Cloudflare dashboard:
 
 | Setting | Value |
 |---------|-------|
-| Framework preset | Vite |
 | Build command | `npm run build` |
-| Build output | `dist` |
-| Root directory | `client` |
-
-Every pull request gets its own preview deployment URL via a GitHub check.
+| Deploy command | `npx wrangler deploy` |
+| Path | `/client` |
+| Production branch | `master` |
 
 ## Disclaimer
 
 Molecular structures are artistic interpretations for novelty and tattoo-design purposes only. Side-chain geometry, stereochemistry, and bond angles are simplified for visual clarity and *may not reflect actual biochemistry*. If you plan to get this tattooed, please verify the structures with a qualified biochemist before your appointment.
+
+## License
+
+MIT — see [LICENSE](./LICENSE). Copyright (c) 2026 Child Left Behind.
