@@ -2,18 +2,16 @@
   "name": "tattoo-vibe",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
-    "dev:client": "npm run dev --prefix client",
-    "dev:server": "npm run dev --prefix server",
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
     "prepare": "husky",
     "security": "npm run security:secrets && npm run security:packages && npm run security:code",
     "security:secrets": "secretlint \"**/*\"",
-    "security:packages": "npm audit --prefix client --audit-level=moderate && npm audit --prefix server --audit-level=moderate",
-    "security:code": "npm run lint --prefix client && npm run lint --prefix server"
+    "security:packages": "npm audit --prefix client --audit-level=moderate",
+    "security:code": "npm run lint --prefix client"
   },
   "devDependencies": {
     "@secretlint/secretlint-rule-preset-recommend": "^12.2.0",
-    "concurrently": "^9.1.2",
     "husky": "^9.1.7",
     "secretlint": "^12.2.0"
   }
