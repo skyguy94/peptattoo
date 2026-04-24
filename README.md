@@ -140,6 +140,18 @@ CI auto-deploy on push is wired via Cloudflare's GitHub App (Workers Builds). Bu
 
 Molecular structures are artistic interpretations for novelty and tattoo-design purposes only. Side-chain geometry, stereochemistry, and bond angles are simplified for visual clarity and *may not reflect actual biochemistry*. If you plan to get this tattooed, please verify the structures with a qualified biochemist before your appointment.
 
+## Acknowledgements
+
+Peptattoo exists because of [this r/tattoos thread](https://www.reddit.com/r/tattoos/comments/1si6y1l/can_someone_help_me/) where [u/Individual_Talk_6149](https://www.reddit.com/user/Individual_Talk_6149/) asked the internet for help turning their last name into a peptide tattoo in the "I am star stuff" style. The chemists who showed up in the replies shaped how the app actually renders:
+
+- [u/Turtle1391](https://www.reddit.com/user/Turtle1391/) — PhD organic chemist who makes peptides for a living. Laid out the atom palette convention ("blue ball for nitrogen, red ball for oxygen, simple stick drawings for the carbons"), noted that selenocysteine is vanishingly rare, and clarified that "there is no B, J, O, X, or Z" amino acid but that those letters do get used for IUPAC codes. The entire rendering strategy — CPK-inspired atom colors, the `~` prefix on nonstandard residues, treating U as a standard 21st residue — comes from their guidance.
+- [u/Ishmael128](https://www.reddit.com/user/Ishmael128/) — introduced the canonical vs non-canonical amino acid distinction and linked [PepDraw](https://www2.tulane.edu/~biochem/WW/PepDraw/) as a reference structure tool.
+- [u/edrz](https://www.reddit.com/user/edrz/) — linked the [IUPAC ambiguity code reference](https://www.dnastar.com/manuals/genvisionpro/17.4/en/topic/iupac-codes) that backs our Asx / Xle / Pyl / Xaa / Glx fallbacks.
+- [u/Labrat15415](https://www.reddit.com/user/Labrat15415/) — casually mentioned that when their colleague got a grant, they synthesized a custom expression plasmid that *literally expresses a polypeptide spelling the colleague's name*, which is either the end state of this hobby or a cautionary tale.
+- [u/sck178](https://www.reddit.com/user/sck178/) — correctly pointed out that the [Amino Acid Wikipedia page](https://en.wikipedia.org/wiki/Amino_acid) has everything a motivated amateur needs.
+
+And to everyone in the thread who chimed in with "this person proteins" — that's the spirit of the whole project.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE). Copyright (c) 2026 Child Left Behind.
