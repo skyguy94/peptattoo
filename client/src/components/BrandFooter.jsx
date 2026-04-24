@@ -1,125 +1,158 @@
-// Brand footer — stylized half-pint school-lunch milk carton in 3/4
-// perspective with the "MISSING" panel as our logo face. Gable-top
-// construction with the distinctive fin/seam at the peak, tall-narrow
-// proportions, and a slight lean so it reads as sitting on a surface.
+// Brand footer — stylized 8oz school-lunch milk carton (half-pint) in 3/4
+// perspective. Proportions match a real US half-pint: 2.25"×2.25"×2.75",
+// so width:height ≈ 1:1.22. Previous versions were too tall and read more
+// like a juice box.
+//
+// Face layout:
+//   FRONT face  — MISSING panel (our logo's "face")
+//   RIGHT face  — "MILK" brand text, rotated to match the perspective
+//   TOP         — slanted gable roof + the iconic fin/seam tab
 
 function MilkCartonLogo() {
+  // Depth projection offsets (how far the back of the carton sits relative
+  // to the front): dx right, dy up. Chosen to give a clear 3/4 read without
+  // exaggerating proportions.
+  //
+  // Using these coordinate blocks for readability:
+  //   front gable peak  (37, 10)
+  //   front gable base  (10, 26) – (64, 26)    width = 54
+  //   front body bottom (10, 76) – (64, 76)    body height = 50, gable = 16
+  //                                            total height = 66  (54:66 = 1:1.22)
+  //   back peak         (61, -1)  (+24, -11 offset)
+  //   back top          (34, 15) – (88, 15)
+  //   back bottom       (88, 65)
+
   return (
     <svg
-      width="128" height="160"
-      viewBox="0 0 128 160"
+      width="120" height="115"
+      viewBox="0 0 110 105"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Child Left Behind logo — school-lunch milk carton"
     >
       <defs>
         <filter id="photo-shadow" x="-15%" y="-15%" width="130%" height="140%">
-          <feDropShadow dx="1.2" dy="1.4" stdDeviation="0.9"
-                        floodColor="rgba(42, 37, 32, 0.35)" />
+          <feDropShadow dx="1" dy="1.2" stdDeviation="0.8"
+                        floodColor="rgba(42, 37, 32, 0.4)" />
         </filter>
       </defs>
 
-      {/* Ground shadow (stays level; doesn't rotate with the carton) */}
-      <ellipse cx="58" cy="148" rx="52" ry="3.5"
-               fill="rgba(42, 37, 32, 0.24)" />
+      {/* Ground shadow (outside the rotation group so it stays level) */}
+      <ellipse cx="48" cy="86" rx="48" ry="3"
+               fill="rgba(42, 37, 32, 0.25)" />
 
-      {/* The entire carton leans a few degrees left, like it's sitting on a
-           cafeteria tray at an angle. Ground shadow is outside this group so
-           it stays horizontal. */}
-      <g transform="rotate(-4.5 58 78)">
+      {/* Whole carton leans slightly — reads as sitting on a cafeteria tray */}
+      <g transform="rotate(-4 52 44)">
 
-        {/* ── Right body face — parallelogram, receding, darker (shadow side) ── */}
+        {/* Right body face — parallelogram, shadow side */}
         <path
-          d="M 62 34 L 86 22 L 86 116 L 62 120 Z"
-          fill="#cfc4a8"
+          d="M 64 26 L 88 15 L 88 65 L 64 76 Z"
+          fill="#cec3a7"
           stroke="#2a2520"
           strokeWidth="1.3"
           strokeLinejoin="round"
         />
 
-        {/* ── Right roof face — slanted gable panel, mid-tone ── */}
+        {/* Right roof face — slanted gable */}
         <path
-          d="M 34 10 L 58 -2 L 86 22 L 62 34 Z"
-          fill="#e3d8bd"
+          d="M 37 10 L 61 -1 L 88 15 L 64 26 Z"
+          fill="#e1d6ba"
           stroke="#2a2520"
           strokeWidth="1.3"
           strokeLinejoin="round"
         />
 
-        {/* ── Fin/seam at the top — the iconic gable-top "tab" where the two
-             roof panels are pressed together. Thin parallelogram rising
-             above the ridge line. ── */}
+        {/* Fin/seam tab at the top — the defining gable-top feature */}
         <path
-          d="M 34 10 L 58 -2 L 58 -8 L 34 4 Z"
-          fill="#b8ac8e"
+          d="M 37 10 L 61 -1 L 61 -5 L 37 6 Z"
+          fill="#b6ab8c"
           stroke="#2a2520"
-          strokeWidth="1.2"
+          strokeWidth="1.1"
           strokeLinejoin="round"
         />
 
-        {/* ── Front face pentagon — carries the printed content ── */}
+        {/* Front face pentagon — carries the MISSING panel */}
         <path
-          d="M 6 120 L 6 34 L 34 10 L 62 34 L 62 120 Z"
+          d="M 10 76 L 10 26 L 37 10 L 64 26 L 64 76 Z"
           fill="#fbf7ed"
           stroke="#2a2520"
-          strokeWidth="1.5"
+          strokeWidth="1.4"
           strokeLinejoin="round"
         />
 
-        {/* Horizontal fold line — where front gable meets front body */}
-        <line x1="6" y1="34" x2="62" y2="34"
-              stroke="#2a2520" strokeWidth="1.2" />
+        {/* Horizontal fold line: front gable base */}
+        <line x1="10" y1="26" x2="64" y2="26"
+              stroke="#2a2520" strokeWidth="1.1" />
 
-        {/* Diagonal fold creases on the front gable — hinting at folded
-             paper construction (both sides of the gable triangle) */}
-        <line x1="6" y1="34" x2="34" y2="10"
-              stroke="#2a2520" strokeWidth="0.7" opacity="0.4" />
-        <line x1="62" y1="34" x2="34" y2="10"
-              stroke="#2a2520" strokeWidth="0.7" opacity="0.4" />
+        {/* Diagonal fold creases on the front gable (each side of the triangle) */}
+        <line x1="10" y1="26" x2="37" y2="10"
+              stroke="#2a2520" strokeWidth="0.6" opacity="0.4" />
+        <line x1="64" y1="26" x2="37" y2="10"
+              stroke="#2a2520" strokeWidth="0.6" opacity="0.4" />
 
-        {/* Subtle side-face label so it reads as a half-pint carton */}
-        <text x="74" y="75"
-              fontSize="2.8" fontWeight="700" fill="#4a4338"
-              fontFamily="'Courier New', monospace"
-              letterSpacing="0.3"
-              transform="rotate(-25 74 75)"
-              opacity="0.55">
-          1/2 PT
-        </text>
+        {/* ── FRONT FACE content: the MISSING panel ── */}
 
-        {/* ── MISSING header — the iconic 80s milk carton headline ── */}
-        <text x="34" y="50" textAnchor="middle"
-              fontSize="8.5" fontWeight="900" fill="#a64545"
+        {/* MISSING headline */}
+        <text x="37" y="37" textAnchor="middle"
+              fontSize="7.5" fontWeight="900" fill="#a64545"
               fontFamily="Georgia, 'Times New Roman', serif"
               letterSpacing="1.2">
           MISSING
         </text>
 
-        {/* ── Photo slot — drop-shadowed inset rectangle with a faded ? ── */}
+        {/* Photo slot with drop shadow */}
         <g filter="url(#photo-shadow)">
-          <rect x="11" y="57" width="46" height="50"
+          <rect x="14" y="42" width="46" height="25"
                 fill="#ffffff"
                 stroke="#2a2520"
-                strokeWidth="0.9" />
+                strokeWidth="0.8" />
         </g>
-        <rect x="11" y="57" width="46" height="50"
+        <rect x="14" y="42" width="46" height="25"
               fill="none"
               stroke="#2a2520"
-              strokeWidth="0.9"
-              strokeDasharray="2 1.8"
-              opacity="0.6" />
-        <text x="34" y="92" textAnchor="middle"
-              fontSize="28" fontWeight="700" fill="#2a2520"
+              strokeWidth="0.8"
+              strokeDasharray="1.8 1.6"
+              opacity="0.55" />
+        <text x="37" y="60" textAnchor="middle"
+              fontSize="16" fontWeight="700" fill="#2a2520"
               fontFamily="Georgia, 'Times New Roman', serif"
               opacity="0.22">
           ?
         </text>
 
-        {/* Small "Have You Seen Me?" subtext beneath the photo slot */}
-        <text x="34" y="115" textAnchor="middle"
-              fontSize="3.4" fontWeight="700" fill="#4a4338"
+        {/* Small subtext below photo */}
+        <text x="37" y="72" textAnchor="middle"
+              fontSize="2.6" fontWeight="700" fill="#4a4338"
               fontFamily="Georgia, 'Times New Roman', serif"
-              letterSpacing="0.3">
+              letterSpacing="0.25">
           HAVE YOU SEEN ME?
+        </text>
+
+        {/* ── RIGHT SIDE FACE content: MILK brand ── */}
+        {/* Rotated to match the perspective of the side face.              */}
+        {/* Side-face "horizontal" axis goes from (64,51) front to (88,40)  */}
+        {/* back — angle atan2(-11,24) ≈ -24.6° from image horizontal.       */}
+        <text
+          x="76" y="44"
+          textAnchor="middle"
+          fontSize="8" fontWeight="900" fill="#2a2520"
+          fontFamily="Georgia, 'Times New Roman', serif"
+          letterSpacing="1.5"
+          transform="rotate(-24.6 76 44)"
+        >
+          MILK
+        </text>
+
+        {/* Tiny 1/2 PT label beneath MILK on the side, matching rotation */}
+        <text
+          x="77" y="52"
+          textAnchor="middle"
+          fontSize="2.6" fontWeight="700" fill="#4a4338"
+          fontFamily="'Courier New', monospace"
+          letterSpacing="0.3"
+          transform="rotate(-24.6 77 52)"
+          opacity="0.7"
+        >
+          1/2 PT
         </text>
 
       </g>
@@ -133,7 +166,7 @@ export default function BrandFooter() {
       <MilkCartonLogo />
 
       {/* Stylized wordmark — "Child Left Behind" is the brand (serif,
-          emphasized), "A SOFTWARE PROJECT" is a subtitle. */}
+          emphasized), "A SOFTWARE PROJECT" sits below as subtitle. */}
       <div className="flex flex-col items-center gap-0.5 mt-1">
         <div
           className="text-stone-700 font-semibold"
