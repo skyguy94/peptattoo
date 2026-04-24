@@ -26,8 +26,8 @@ function MilkCartonLogo() {
 
   return (
     <svg
-      width="120" height="92"
-      viewBox="0 0 110 85"
+      width="120" height="101"
+      viewBox="0 -8 110 93"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Child Left Behind logo — school-lunch milk carton"
     >
