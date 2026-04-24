@@ -1,0 +1,130 @@
+# Peptattoo
+
+*Every letter becomes an amino acid. Type a word and see the peptide it spells.*
+
+Peptattoo is a novelty tool that turns names and phrases into scientifically-grounded peptide chain artwork — the kind of thing you might eventually want on your skin, or at least in a lab notebook.
+
+## Inspiration
+
+Amino-acid tattoos have a small but devoted following — people spell their names or a meaningful phrase using the standard single-letter codes (`A`=Alanine, `L`=Leucine, and so on) and have the resulting peptide chain rendered in the classic ball-and-stick molecular style. The best-known example in the wild is the "I AM STARSTUFF" tattoo, where a 13-residue peptide spells Carl Sagan's phrase.
+
+Getting that kind of artwork designed usually means commissioning it or wrestling with chemistry drawing software that wasn't built for the purpose. Peptattoo takes the friction out: you type, the peptide renders, and you can preview it on a body part before deciding whether to send the SVG to an artist.
+
+## Live demo
+
+Deployed on Cloudflare Pages: **[peptattoo.pages.dev](https://peptattoo.pages.dev)** *(once the first build goes green)*
+
+## What it does
+
+- **Type on the virtual keyboard** (or use your physical keyboard while the page is focused). Each key shows the amino acid's three-letter code and a faint watermark of its side-chain structure, so you can see what you're building before you press the key.
+- **Watch the peptide chain assemble in real time** above the keyboard — N, Cα, C, and O atoms; peptide bonds; C=O double bonds; and the unique side chain for each of the 20 standard amino acids plus selenocysteine (the 21st).
+- **Letters without a standard amino acid** (B, J, O, X, Z) are rendered using their IUPAC ambiguity or rare-residue codes (Asx, Xle, Pyl, Xaa, Glx) with a leading `~` so you know they're best-effort approximations, not real residues.
+- **Preview the tattoo on a 3D mannequin.** Pick a body part (bicep, forearm, thigh, calf, or face), orbit/zoom the view, then slew / rotate / resize the tattoo as a projected decal on that surface. Change skin tone to see how the ink will read. Toggle whether the per-residue letter labels render on the tattoo itself.
+- **Export as SVG** for sending to a tattoo artist or just saving for later. A confirmation modal restates the novelty disclaimer before the download fires.
+- **Scrolling peptide ticker** at the bottom of the page shows sample words (LIFE, DNA, HELIX, I AM STARSTUFF, and others) rendered as mini peptide chains — a passive demo of the translation.
+- **Client-side profanity filter** covers English (via `bad-words`) and a curated Spanish list, matched whole-word and case-insensitive. Blocked input clears the chain panel with a gentle "try a different word" message rather than hard-blocking typing.
+
+## Amino acid reference
+
+All 26 letters map to something; the app never silently drops input.
+
+**Standard (1–20) + Selenocysteine (21):**
+
+| | | | | | | |
+|--|--|--|--|--|--|--|
+| A Alanine | C Cysteine | D Aspartate | E Glutamate | F Phenylalanine | G Glycine | H Histidine |
+| I Isoleucine | K Lysine | L Leucine | M Methionine | N Asparagine | P Proline | Q Glutamine |
+| R Arginine | S Serine | T Threonine | V Valine | W Tryptophan | Y Tyrosine | U Selenocysteine |
+
+**Non-standard (IUPAC ambiguity / rare-residue codes, rendered with `~`):**
+
+| Letter | Maps to | Meaning |
+|--------|---------|---------|
+| B | Asx | Asp or Asn ambiguity |
+| J | Xle | Leu or Ile ambiguity |
+| O | Pyl | Pyrrolysine (22nd amino acid, archaea) |
+| X | Xaa | Unknown residue |
+| Z | Glx | Glu or Gln ambiguity |
+
+## Tech stack
+
+- **React + Vite** — app shell and dev loop
+- **Three.js** + **@react-three/fiber** + **@react-three/drei** — 3D mannequin, orbit controls, and decal projection onto the selected body part
+- **Tailwind CSS** — styling, paired with Georgia serif + Courier mono for a lab-notebook feel
+- **Vitest** — test runner
+- **`bad-words`** (plus a curated Spanish supplement) — client-side content filter
+
+No backend. No database. No API calls. The app is a fully static site.
+
+## How it works
+
+1. User types → `inputText` state updates
+2. `textToAminoAcids(text)` maps each character to an amino acid record (or space marker)
+3. `PeptideChain` renders the zig-zag backbone and labeled side chains as SVG in real time
+4. `TattooPreview` clones that SVG, strips its background for transparency, rasterizes it to a canvas, wraps it in a Three.js `CanvasTexture`, and projects it onto the focused body part's surface via `DecalGeometry`
+5. "Export SVG" downloads the on-page chain SVG after the novelty disclaimer is acknowledged
+
+Molecular structures render as **SVG rather than canvas** so the exported image is resolution-independent — tattoo artists typically prefer vector input.
+
+### Rendering notes
+
+- **Atom palette** is CPK-inspired but intentionally desaturated ("muted slate", "steel blue", "dusty rose", etc.) so side-chain colors don't fight the paper background or each other.
+- **Aromatic rings** (F, W, Y, H) draw explicit double bonds between ring carbons rather than the simplified circle — more scientifically accurate, and the community feedback on real tattoos was that explicit bonds read better under skin.
+- **Stereochemistry** (wedge/dash bonds) is omitted from side chains for visual cleanliness.
+- **Selenocysteine (U)** uses pink for the selenium atom, not yellow (yellow is reserved for sulfur per convention).
+
+## Getting started
+
+```bash
+git clone git@github.com:skyguy94/peptattoo.git
+cd peptattoo/client
+npm install
+npm run dev
+```
+
+The dev server runs at `http://localhost:5173`. Edits hot-reload.
+
+### Other useful commands
+
+All run from the repo root:
+
+```bash
+npm run build      # production build (client/dist/)
+npm run security   # secretlint + npm audit + eslint-plugin-security
+```
+
+From `client/`:
+
+```bash
+npm test           # vitest
+npm run lint       # eslint
+```
+
+## Repository layout
+
+```
+/client           # The entire application
+  /src
+    /components   # React components (PeptideChain, VirtualKeyboard, TattooPreview, …)
+    /lib          # Amino-acid data, content filter, shared disclaimer JSX
+  /public         # Static assets served as-is
+/.husky           # Git pre-commit hooks (runs client tests)
+CLAUDE.md         # Guidance for Claude Code when working in this repo
+```
+
+## Deployment
+
+The site is hosted on **Cloudflare Pages**, deploying automatically on every push to `master`. Build config:
+
+| Setting | Value |
+|---------|-------|
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Build output | `dist` |
+| Root directory | `client` |
+
+Every pull request gets its own preview deployment URL via a GitHub check.
+
+## Disclaimer
+
+Molecular structures are artistic interpretations for novelty and tattoo-design purposes only. Side-chain geometry, stereochemistry, and bond angles are simplified for visual clarity and *may not reflect actual biochemistry*. If you plan to get this tattooed, please verify the structures with a qualified biochemist before your appointment.
