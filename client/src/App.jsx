@@ -45,17 +45,14 @@ export default function App() {
         >
           Peptattoo
         </h1>
-        <p className="text-stone-500 text-sm italic max-w-md mx-auto"
+        <p className="text-stone-500 text-sm italic max-w-2xl mx-auto whitespace-nowrap"
            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
           Every letter is an amino acid — type a word and see the peptide it spells.
         </p>
       </header>
 
-      {/* ── Ticker — sample words rendered as scrolling peptide chains ── */}
-      <PeptideTicker />
-
       {/* ── Body ── */}
-      <div className="flex gap-10 px-6 pt-8 pb-20 max-w-screen-2xl mx-auto items-start flex-col xl:flex-row">
+      <div className="flex gap-10 px-6 pt-4 pb-10 max-w-screen-2xl mx-auto items-start flex-col xl:flex-row">
 
         {/* Left: chain output + keyboard + footnotes */}
         <div className="flex flex-col items-center gap-0 flex-1 min-w-0 w-full">
@@ -85,6 +82,9 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* ── Ticker — sample words rendered as scrolling peptide chains ── */}
+      <PeptideTicker />
 
     </div>
   )

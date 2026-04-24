@@ -65,7 +65,7 @@ function Key({ k, active, onAction }) {
   let bg, border, labelColor, codeColor
 
   if (isInert) {
-    bg = '#d0cac2'; border = '#b8b2aa'; labelColor = '#8a847c'; codeColor = 'transparent'
+    bg = '#d8d2c8'; border = '#cec7bd'; labelColor = '#a69f95'; codeColor = 'transparent'
   } else if (active && isLetter) {
     bg = data?.color ?? '#6b7280'; border = bg; labelColor = 'white'; codeColor = 'rgba(255,255,255,0.75)'
   } else if (active) {
@@ -88,7 +88,7 @@ function Key({ k, active, onAction }) {
         boxShadow: active && !isInert
           ? 'inset 0 2px 4px rgba(0,0,0,0.22)'
           : isInert
-          ? '0 2px 0 #a09890'
+          ? '0 1px 0 rgba(128, 115, 95, 0.22)'
           : '0 3px 0 #9a9088, 0 1px 3px rgba(0,0,0,0.10)',
         transform: active && !isInert ? 'translateY(2px)' : 'none',
         cursor: isInert ? 'default' : 'pointer',
@@ -97,7 +97,7 @@ function Key({ k, active, onAction }) {
         gap: 2,
         padding: '0 4px',
         outline: 'none', userSelect: 'none',
-        opacity: isInert ? 0.72 : 1,
+        opacity: 1,
         transition: 'transform 0.08s, box-shadow 0.08s, background 0.10s, border-color 0.10s',
         WebkitTapHighlightColor: 'transparent',
         pointerEvents: isInert ? 'none' : 'auto',
