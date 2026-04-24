@@ -136,6 +136,59 @@ CI auto-deploy on push is wired via Cloudflare's GitHub App (Workers Builds). Bu
 | Path | `/client` |
 | Production branch | `master` |
 
+## Security
+
+The attack surface is deliberately small — Peptattoo is a static client-side app with no backend, no authentication, no persistence, no cookies, and no server-side logic. Still, the site runs through standard hardening and is periodically re-scanned.
+
+### Response headers
+
+Security headers are defined in `client/public/_headers` (copied to `dist/` by Vite and picked up by Cloudflare Workers Static Assets on deploy):
+
+| Header | Value |
+|---|---|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `Content-Security-Policy` | `default-src 'self'` with `data:` + `blob:` allowed on `img-src`, `'unsafe-inline'` on `style-src`, everything else locked to self |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | disables `camera`, `microphone`, `geolocation`, `payment`, `usb`, `interest-cohort` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+| `Cross-Origin-Embedder-Policy` | `require-corp` |
+
+**Known CSP tradeoff:** `'unsafe-inline'` is retained on `style-src` because JSX uses inline `style={}` extensively. Tightening would require refactoring every inline style into external CSS — a cosmetic cleanup that hasn't been prioritized.
+
+Header grade can be checked live at [securityheaders.com](https://securityheaders.com/?q=https%3A%2F%2Fpeptide-tattoo.com) or [Mozilla Observatory](https://observatory.mozilla.org/analyze/peptide-tattoo.com).
+
+### Supply chain
+
+- `npm run security` (from the repo root) runs three checks:
+  - `secretlint` across the tree for accidentally-committed secrets
+  - `npm audit --audit-level=moderate` against the client lockfile
+  - `eslint-plugin-security` via the client ESLint config
+- [Dependabot](./.github/dependabot.yml) is configured to open weekly PRs for npm dependency updates.
+
+### DAST
+
+The live site is scanned periodically with the [OWASP ZAP Baseline](https://www.zaproxy.org/docs/docker/baseline-scan/) — a passive, spider-only scan that reports common web misconfigurations. Docker or Podman:
+
+```bash
+mkdir -p zap-reports
+podman run --rm -v "$(pwd)/zap-reports:/zap/wrk:rw" \
+  -t docker.io/zaproxy/zap-stable \
+  zap-baseline.py -t https://peptide-tattoo.com/ -r report.html
+```
+
+The most recent baseline passes with **0 FAIL / 0 WARN** on actionable items. The handful of residual informational warnings are all accepted tradeoffs:
+
+- `CSP: style-src unsafe-inline` — documented above
+- `Timestamp Disclosure - Unix` — Vite embeds the build timestamp in bundled JS; harmless
+- `Storable and Cacheable Content` — ZAP's default opinion on cacheable public content; our content is public by design
+
+### Content filter
+
+The profanity filter (`client/src/lib/contentFilter.js`) uses [`bad-words`](https://www.npmjs.com/package/bad-words) for English plus a curated Spanish list. It runs **client-side**, so a determined user can bypass it by editing JS. That's acceptable for a novelty tool where nothing serious is gated, but it would need to move server-side if the app ever accepted submissions or shared content between users.
+
 ## Disclaimer
 
 Molecular structures are artistic interpretations for novelty and tattoo-design purposes only. Side-chain geometry, stereochemistry, and bond angles are simplified for visual clarity and *may not reflect actual biochemistry*. If you plan to get this tattooed, please verify the structures with a qualified biochemist before your appointment.
