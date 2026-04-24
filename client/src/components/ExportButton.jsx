@@ -18,7 +18,7 @@ export default function ExportButton() {
   return (
     <button
       onClick={handleExport}
-      className="mt-6 border border-stone-400 hover:border-stone-700 hover:bg-stone-800 hover:text-white text-stone-700 px-6 py-2 rounded-lg text-sm transition-colors tracking-wide"
+      className="border border-stone-300 hover:border-stone-500 hover:bg-stone-700 hover:text-white text-stone-500 px-3 py-1 rounded text-xs transition-colors tracking-wide bg-white/80 backdrop-blur-sm"
     >
       Export SVG
     </button>

@@ -33,10 +33,10 @@ const CO_LEN   = 22                              // px, C=O bond (slightly short
 
 // Section layout (relative to sectionY):
 const BB_ABOVE = 38    // space above backbone for O atoms (CO_LEN + Cα height + margin)
-const BB_BELOW = 108   // space below backbone for side chains + label
+const BB_BELOW = 108   // space below backbone for side chains + letter label
 export const CHAIN_H = BB_ABOVE + BB_BELOW       // 146px
 
-export default function ConnectedChain({ aas, svgWidth, sectionY, inputText }) {
+export default function ConnectedChain({ aas, svgWidth, sectionY }) {
   const n = aas.length
   if (!n) return null
 
@@ -102,7 +102,7 @@ export default function ConnectedChain({ aas, svgWidth, sectionY, inputText }) {
         </g>
       ))}
 
-      {/* ══ PASS 4: letter labels below side chain area ══ */}
+      {/* ══ PASS 4: single-letter labels below side chain area ══ */}
       {aas.map((aa, i) => (
         <text
           key={`lbl-${i}`}
@@ -118,22 +118,6 @@ export default function ConnectedChain({ aas, svgWidth, sectionY, inputText }) {
           {aa.letter}
         </text>
       ))}
-
-      {/* ══ Original phrase below chain ══ */}
-      {inputText && (
-        <text
-          x={svgWidth / 2}
-          y={sectionY + CHAIN_H + 30}
-          textAnchor="middle"
-          fill={INK}
-          fontSize={18}
-          fontWeight="400"
-          fontFamily="Georgia, 'Times New Roman', serif"
-          letterSpacing="5"
-        >
-          {inputText.toUpperCase()}
-        </text>
-      )}
     </g>
   )
 }

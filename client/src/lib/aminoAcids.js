@@ -40,7 +40,7 @@ export const AMINO_ACIDS = {
 //   O = Pyl  (Pyrrolysine — real 22nd amino acid, archaea)
 //   X = Xaa  (unknown residue)
 //   Z = Glx  (Glu or Gln ambiguity)
-const NONSTANDARD_AAS = {
+export const NONSTANDARD_AAS = {
   B: { name: 'Asx',        letter: 'B', code: 'ASX', color: '#8a7060', nonstandard: true },
   J: { name: 'Xle',        letter: 'J', code: 'XLE', color: '#7c8594', nonstandard: true },
   O: { name: 'Pyrrolysine',letter: 'O', code: 'PYL', color: '#3d8a7a', nonstandard: true },
