@@ -1,14 +1,10 @@
 import { SideChain, SvgSharedDefs } from './chemistry'
 
 // ── Two-fist knuckle-tattoo view ─────────────────────────────────────────────
-// Each knuckle displays the AMINO ACID structure (not just the letter) since
-// that's the whole premise of the app. Letters appear as small captions
-// beneath each knuckle to tie back to the main chain's visual language.
-//
-// Anatomy: subject is facing the viewer with fists raised, knuckles forward,
-// fingers pointing down. Subject's right hand is on viewer's LEFT with its
-// thumb on the OUTER (far-left) side; subject's left hand mirrors on the
-// viewer's right. This is the classic "knuckle tattoo" display pose.
+// Pose reference: both fists pressed together in front of the viewer,
+// knuckles forward, fingers pointing down, thumbs tucked BEHIND the fists
+// (not visible). Each knuckle carries its amino acid's side-chain structure
+// in ink; letters appear as small captions, matching the main chain panel.
 
 const SVG_W = 420
 const SVG_H = 380
@@ -26,7 +22,7 @@ function darken(hex, amount) {
 function splitLetters(letters) {
   const upper = letters.toUpperCase().slice(0, 8)
   const mid = Math.ceil(upper.length / 2)
-  /* eslint-disable security/detect-object-injection -- i is bounded 0..3, upper is a string */
+  /* eslint-disable security/detect-object-injection -- i bounded 0..3, upper is string */
   return {
     left:  [0, 1, 2, 3].map(i => upper[i]       || ''),
     right: [0, 1, 2, 3].map(i => upper[mid + i] || ''),
@@ -34,69 +30,102 @@ function splitLetters(letters) {
   /* eslint-enable security/detect-object-injection */
 }
 
-// Symmetric knuckle layout. Slight dip on outer knuckles (pinky & index
-// positions) matches how a real fist reads from straight on.
-const KNUCKLE_R = 19
-const KNUCKLE_Y_OFFSETS = [3, -1, -1, 3]
+// ── Hand geometry ──────────────────────────────────────────────────────────
+// Drawn in the hand's local coordinates (0,0) at the top-left of its bounding
+// box. cx/cy parameters then translate it into the final position. Symmetric
+// so the same drawing works for both hands (thumbs are hidden in this pose).
 
-// ── Hand component ─────────────────────────────────────────────────────────
-// `flip` = -1 for viewer's-left hand (subject's right, thumb on far left)
-//          +1 for viewer's-right hand (subject's left, thumb on far right)
-function Hand({ letters, cx, cy, skin, flip, shadowId }) {
-  const skinShade   = darken(skin, 0.10)
-  const strokeColor = darken(skin, 0.45)
+const HAND_W = 130
+const HAND_H = 200
 
-  const knuckleYBase = cy - 88
-  const knuckleXs = [0, 1, 2, 3].map(i => cx - 51 + i * 34)
+// 4 knuckle x-positions across the top of each hand.
+const KNUCKLE_CENTERS_X = [24, 54, 84, 112]
+const KNUCKLE_Y_BASE = 30
+const KNUCKLE_Y_OFFSETS = [4, -2, -2, 5]   // outer knuckles sit a touch lower
+const KNUCKLE_R = 17
+
+function Hand({ letters, cx, cy, skin, shadowId }) {
+  const skinShade   = darken(skin, 0.08)  // used on finger/wrist segments behind
+  const strokeColor = darken(skin, 0.50)
+
+  const knuckles = KNUCKLE_CENTERS_X.map((kx, i) => ({
+    cx: cx + kx,
+    /* eslint-disable-next-line security/detect-object-injection -- i is 0..3 */
+    cy: cy + KNUCKLE_Y_BASE + KNUCKLE_Y_OFFSETS[i],
+  }))
+
+  // Silhouette path — traces a tight fist with 4 knuckle bumps at the top,
+  // straight-ish sides, and a tapered wrist at the bottom. Coords are
+  // relative to (cx, cy) = top-left of the hand's bounding box.
+  const px = (x) => cx + x
+  const py = (y) => cy + y
+
+  const silhouette = [
+    // start: outer-top of leftmost knuckle bump
+    `M ${px(10)} ${py(36)}`,
+    // curve up the outer edge of the pinky
+    `Q ${px(8)} ${py(22)} ${px(14)} ${py(16)}`,
+    // pinky knuckle bump (1)
+    `Q ${px(24)} ${py(4)}  ${px(34)} ${py(16)}`,
+    `Q ${px(38)} ${py(20)} ${px(42)} ${py(22)}`,
+    // ring knuckle bump (2)
+    `Q ${px(44)} ${py(2)}  ${px(54)} ${py(0)}`,
+    `Q ${px(64)} ${py(2)}  ${px(70)} ${py(22)}`,
+    // middle knuckle bump (3) - tallest
+    `Q ${px(74)} ${py(4)}  ${px(84)} ${py(0)}`,
+    `Q ${px(94)} ${py(2)}  ${px(100)} ${py(22)}`,
+    // index knuckle bump (4)
+    `Q ${px(104)} ${py(4)} ${px(114)} ${py(16)}`,
+    `Q ${px(122)} ${py(22)} ${px(122)} ${py(38)}`,
+    // down the inner (index-side) edge
+    `L ${px(122)} ${py(138)}`,
+    // wrist taper right
+    `Q ${px(120)} ${py(168)} ${px(108)} ${py(178)}`,
+    `L ${px(98)} ${py(200)}`,
+    // wrist bottom
+    `L ${px(32)} ${py(200)}`,
+    // wrist taper left
+    `L ${px(22)} ${py(178)}`,
+    `Q ${px(10)} ${py(168)} ${px(8)} ${py(138)}`,
+    // up the outer (pinky-side) edge
+    `L ${px(10)} ${py(36)}`,
+    `Z`,
+  ].join(' ')
 
   return (
     <g>
-      {/* ─── SKIN (drop-shadowed so the hand reads as a volumetric object) ─── */}
+      {/* Drop-shadowed skin layer: silhouette + knuckle bumps on top */}
       <g filter={`url(#${shadowId})`}>
-        {/* Wrist — behind the palm */}
-        <rect
-          x={cx - 34} y={cy + 76}
-          width={68} height={42} rx={10}
+        <path d={silhouette} fill={skin} />
+
+        {/* Subtle finger-segment shading (slightly darker band below knuckles) */}
+        <path
+          d={`M ${px(14)} ${py(38)} L ${px(118)} ${py(38)} L ${px(118)} ${py(88)} L ${px(14)} ${py(88)} Z`}
           fill={skinShade}
+          opacity={0.5}
         />
 
-        {/* Thumb — behind the palm, on the OUTER side */}
-        <ellipse
-          cx={cx + flip * 52} cy={cy - 10}
-          rx={22} ry={42}
-          fill={skinShade}
-        />
-
-        {/* Palm — main body */}
-        <ellipse
-          cx={cx} cy={cy + 8}
-          rx={58} ry={92}
-          fill={skin}
-        />
-
-        {/* 4 knuckle bumps at the top of the fist */}
-        {knuckleXs.map((kx, i) => (
+        {/* Knuckle bumps — raised spheres on top of the fingers */}
+        {knuckles.map((k, i) => (
           <circle
-            key={`kn-${i}`}
-            cx={kx}
-            /* eslint-disable-next-line security/detect-object-injection -- i is 0..3 */
-            cy={knuckleYBase + KNUCKLE_Y_OFFSETS[i]}
-            r={KNUCKLE_R}
+            key={`k-${i}`}
+            cx={k.cx} cy={k.cy} r={KNUCKLE_R}
             fill={skin}
           />
         ))}
       </g>
 
-      {/* ─── DETAIL LINES (no shadow — they're surface markings) ─── */}
-      {/* Finger separations */}
+      {/* ─── DETAIL LAYER (no shadow — surface markings) ─── */}
+
+      {/* Finger separations — dark vertical grooves below the knuckles */}
       {[0, 1, 2].map(i => {
         /* eslint-disable-next-line security/detect-object-injection -- i is 0..2 */
-        const x = (knuckleXs[i] + knuckleXs[i + 1]) / 2
+        const x = (knuckles[i].cx + knuckles[i + 1].cx) / 2
         return (
           <line
             key={`sep-${i}`}
-            x1={x} y1={knuckleYBase + 8}
-            x2={x} y2={knuckleYBase + 48}
+            x1={x} y1={py(32)}
+            x2={x} y2={py(130)}
             stroke={strokeColor}
             strokeWidth={1.5}
             strokeOpacity={0.38}
@@ -104,70 +133,53 @@ function Hand({ letters, cx, cy, skin, flip, shadowId }) {
         )
       })}
 
-      {/* Soft arc on top of each knuckle to suggest the bump's curvature */}
-      {knuckleXs.map((kx, i) => {
-        /* eslint-disable-next-line security/detect-object-injection -- i is 0..3 */
-        const ky = knuckleYBase + KNUCKLE_Y_OFFSETS[i]
-        return (
-          <path
-            key={`karc-${i}`}
-            d={`M ${kx - 15} ${ky - 3} Q ${kx} ${ky - 18} ${kx + 15} ${ky - 3}`}
-            fill="none"
-            stroke={strokeColor}
-            strokeWidth={1.3}
-            strokeOpacity={0.30}
-          />
-        )
-      })}
+      {/* Soft curve on top of each knuckle — suggests the bump's highlight/shadow */}
+      {knuckles.map((k, i) => (
+        <path
+          key={`karc-${i}`}
+          d={`M ${k.cx - 14} ${k.cy - 2} Q ${k.cx} ${k.cy - 16} ${k.cx + 14} ${k.cy - 2}`}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={1.3}
+          strokeOpacity={0.30}
+        />
+      ))}
 
-      {/* Thumb-palm boundary curve */}
+      {/* Lower knuckle crease — horizontal line below the MCP bumps where
+           the fingers begin, to suggest the proximal phalanx division */}
       <path
-        d={`M ${cx + flip * 28} ${cy - 38}
-            Q ${cx + flip * 38} ${cy - 5}
-              ${cx + flip * 30} ${cy + 35}`}
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth={1.4}
-        strokeOpacity={0.4}
-      />
-
-      {/* Thumbnail */}
-      <path
-        d={`M ${cx + flip * 58} ${cy - 36}
-            Q ${cx + flip * 64} ${cy - 30}
-              ${cx + flip * 60} ${cy - 22}`}
+        d={`M ${px(12)} ${py(56)} Q ${px(65)} ${py(64)} ${px(120)} ${py(56)}`}
         fill="none"
         stroke={strokeColor}
         strokeWidth={1.2}
-        strokeOpacity={0.5}
+        strokeOpacity={0.35}
       />
 
-      {/* Wrist side-tapers (subtle vertical shading) */}
-      <line x1={cx - 26} y1={cy + 85} x2={cx - 26} y2={cy + 112}
-            stroke={strokeColor} strokeWidth={1.2} strokeOpacity={0.3} />
-      <line x1={cx + 26} y1={cy + 85} x2={cx + 26} y2={cy + 112}
-            stroke={strokeColor} strokeWidth={1.2} strokeOpacity={0.3} />
+      {/* Outer silhouette stroke — subtle contour so the hand reads even on
+           a matching background. Redraws the silhouette with stroke only. */}
+      <path
+        d={silhouette}
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth={1.6}
+        strokeOpacity={0.55}
+      />
 
-      {/* ─── AMINO ACID TATTOOS on each knuckle ─── */}
-      {/* Each knuckle gets its residue's side-chain structure rendered as    */}
-      {/* monochrome ink on skin. Letter caption beneath matches the main     */}
-      {/* chain panel's labeling style.                                        */}
-      {knuckleXs.map((kx, i) => {
+      {/* ─── AMINO ACID TATTOOS ─── */}
+      {knuckles.map((k, i) => {
         /* eslint-disable-next-line security/detect-object-injection -- i is 0..3 */
         const letter = letters[i]
         if (!letter) return null
-        /* eslint-disable-next-line security/detect-object-injection -- i is 0..3 */
-        const ky = knuckleYBase + KNUCKLE_Y_OFFSETS[i]
         return (
           <g key={`aa-${i}`}>
             <g
-              transform={`translate(${kx}, ${ky + 2}) scale(0.32)`}
+              transform={`translate(${k.cx}, ${k.cy + 2}) scale(0.32)`}
               style={{ filter: 'grayscale(100%)' }}
             >
               <SideChain letter={letter} caX={0} caY={-12} />
             </g>
             <text
-              x={kx} y={ky + 40}
+              x={k.cx} y={k.cy + 40}
               textAnchor="middle"
               fontSize={10}
               fontWeight={700}
@@ -186,9 +198,14 @@ function Hand({ letters, cx, cy, skin, flip, shadowId }) {
 
 export default function KnucklesView({ letters, skinColor }) {
   const { left, right } = splitLetters(letters)
-  const cxLeft  = SVG_W / 2 - 102
-  const cxRight = SVG_W / 2 + 102
-  const cy = SVG_H / 2 + 10
+
+  // Two hands pressed together with a narrow center gap (~10px).
+  // Each hand's bounding box origin (cx, cy) is top-left.
+  const gap = 10
+  const totalW = HAND_W * 2 + gap
+  const leftX  = (SVG_W - totalW) / 2
+  const rightX = leftX + HAND_W + gap
+  const topY   = (SVG_H - HAND_H) / 2
 
   return (
     <svg
@@ -198,26 +215,22 @@ export default function KnucklesView({ letters, skinColor }) {
       style={{ background: '#ede8df' }}
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Shared chemistry gradients/filters used by the Atom rendering */}
       <SvgSharedDefs />
-
       <defs>
-        <filter id="hand-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <filter id="hand-shadow" x="-15%" y="-15%" width="130%" height="130%">
           <feDropShadow dx="0" dy="3" stdDeviation="4"
-                        floodColor="rgba(0, 0, 0, 0.18)" />
+                        floodColor="rgba(0, 0, 0, 0.20)" />
         </filter>
       </defs>
 
-      {/* Subject's right hand — viewer's left, thumb on outer (far) left */}
       <Hand letters={left}
-            cx={cxLeft}  cy={cy}
-            skin={skinColor} flip={-1}
+            cx={leftX}  cy={topY}
+            skin={skinColor}
             shadowId="hand-shadow" />
 
-      {/* Subject's left hand — viewer's right, thumb on outer (far) right */}
       <Hand letters={right}
-            cx={cxRight} cy={cy}
-            skin={skinColor} flip={1}
+            cx={rightX} cy={topY}
+            skin={skinColor}
             shadowId="hand-shadow" />
     </svg>
   )
