@@ -1,3 +1,5 @@
+import { NOVELTY_DISCLAIMER } from '../lib/noveltyDisclaimer'
+
 const NONSTANDARD_LETTERS = ['B', 'J', 'O', 'X', 'Z']
 
 const NONSTANDARD_NOTES = {
@@ -34,13 +36,7 @@ export default function ChainFooter({ chain }) {
         })}.{' '}
         Their structures on this site are best-effort approximations.
       </p>
-      <p>
-        Molecular structures are artistic interpretations for novelty and tattoo-design
-        purposes only. Side-chain geometry, stereochemistry, and bond angles are
-        simplified for visual clarity and <em>may not reflect actual biochemistry</em>.
-        If you plan to get this tattooed, please verify the structures with a qualified
-        biochemist before your appointment.
-      </p>
+      <p>{NOVELTY_DISCLAIMER}</p>
     </div>
   )
 }
