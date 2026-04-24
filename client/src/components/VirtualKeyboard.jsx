@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AMINO_ACIDS, NONSTANDARD_AAS } from '../lib/aminoAcids'
+import { SideChain } from './chemistry'
 
 // ── Geometry ──────────────────────────────────────────────────────────────────
 const G = 4    // gap (px)
@@ -102,8 +103,28 @@ function Key({ k, active, onAction }) {
         WebkitTapHighlightColor: 'transparent',
         pointerEvents: isInert ? 'none' : 'auto',
         flexShrink: 0,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Monochrome amino acid side-chain watermark */}
+      {isLetter && data && (
+        <svg
+          width="100%" height="100%"
+          viewBox="0 0 60 68"
+          preserveAspectRatio="xMidYMid meet"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            filter: 'grayscale(100%) opacity(0.18)',
+            zIndex: 0,
+          }}
+        >
+          <SideChain letter={k.letter} caX={30} caY={14} />
+        </svg>
+      )}
+
       {/* Primary label */}
       <span style={{
         fontSize: isLetter ? 20 : k.id === 'bksp' ? 18 : 11,
@@ -112,6 +133,8 @@ function Key({ k, active, onAction }) {
         color: labelColor,
         fontFamily: isLetter ? "Georgia, 'Times New Roman', serif" : 'system-ui, sans-serif',
         letterSpacing: isLetter ? '0.5px' : 0,
+        position: 'relative',
+        zIndex: 1,
       }}>
         {k.label}
       </span>
@@ -122,6 +145,8 @@ function Key({ k, active, onAction }) {
           color: codeColor,
           fontFamily: "'Courier New', monospace",
           letterSpacing: '1px',
+          position: 'relative',
+          zIndex: 1,
         }}>
           {data.nonstandard ? `~${data.code}` : data.code}
         </span>
