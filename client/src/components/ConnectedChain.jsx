@@ -103,9 +103,12 @@ export default function ConnectedChain({ aas, svgWidth, sectionY }) {
       ))}
 
       {/* ══ PASS 4: single-letter labels below side chain area ══ */}
+      {/* className is used by the tattoo pipeline to strip these from the    */}
+      {/* rasterized texture when "show letters on tattoo" is off.            */}
       {aas.map((aa, i) => (
         <text
           key={`lbl-${i}`}
+          className="aa-letter-label"
           x={caX(i)}
           y={sectionY + BB_ABOVE + BB_BELOW - 8}
           textAnchor="middle"

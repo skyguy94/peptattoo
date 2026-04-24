@@ -105,7 +105,7 @@ function decalTransform(part, horiz, vert, tatRot) {
 // effect body synchronously — so we don't trip react-hooks/set-state-in-effect.
 // An empty chain simply skips the load; callers gate decal rendering on
 // chain.length separately.
-function useChainTexture(chain) {
+function useChainTexture(chain, showLetters) {
   const [texture, setTexture] = useState(null)
 
   useEffect(() => {
@@ -117,6 +117,9 @@ function useChainTexture(chain) {
 
     const clone = svgEl.cloneNode(true)
     clone.style.background = 'transparent'
+    if (!showLetters) {
+      clone.querySelectorAll('.aa-letter-label').forEach(el => el.remove())
+    }
     const svgString = new XMLSerializer().serializeToString(clone)
     const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -143,7 +146,7 @@ function useChainTexture(chain) {
     img.src = url
 
     return () => { cancelled = true }
-  }, [chain])
+  }, [chain, showLetters])
 
   // Dispose superseded textures so GPU memory doesn't leak as the chain edits
   useEffect(() => () => { texture?.dispose?.() }, [texture])
@@ -318,8 +321,9 @@ export default function TattooPreview({ chain }) {
   const [tatSize,     setTatSize]     = useState(0.08)  // decal "height" along surface
   const [tatHoriz,    setTatHoriz]    = useState(0)     // -1..+1 around / longitude
   const [tatVert,     setTatVert]     = useState(0)     // -1..+1 along  / latitude
+  const [showLetters, setShowLetters] = useState(false) // letters visible on tattoo
 
-  const tattooTexture = useChainTexture(chain)
+  const tattooTexture = useChainTexture(chain, showLetters)
   const hasChain = chain.some(aa => !aa.space)
 
   const { position: decalPosition, rotation: decalRotation } = useMemo(
@@ -426,6 +430,16 @@ export default function TattooPreview({ chain }) {
                  onChange={e => setTatSize(Number(e.target.value))}
                  className="flex-1 accent-stone-700" />
         </div>
+
+        <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none mt-1 pl-1">
+          <input
+            type="checkbox"
+            checked={showLetters}
+            onChange={e => setShowLetters(e.target.checked)}
+            className="accent-stone-700"
+          />
+          Show letters on tattoo
+        </label>
       </div>
 
       {/* Skin tone */}
