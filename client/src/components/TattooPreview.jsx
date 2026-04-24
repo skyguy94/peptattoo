@@ -55,6 +55,47 @@ const DECAL_SURFACE = {
   face:    0.115,
 }
 
+// Half of the cylindrical portion of each capsule — used to bound the vertical
+// slide so the decal stays on the shaft and off the end caps.
+const CAPSULE_HALF_LEN = {
+  bicep:   0.085,
+  forearm: 0.090,
+  thigh:   0.110,
+  calf:    0.150,
+}
+
+// Map (horiz, vert) in [-1, 1] to a surface position + outward-facing rotation.
+// tatRot is the user's "spin on skin" rotation, applied around the surface
+// normal AFTER the part-specific orientation. XYZ Euler order is intrinsic in
+// Three.js, so [0, θ, tatRot] composes cleanly: Y rotation re-aims +Z outward,
+// then Z rotation around the new (outward) axis spins the tattoo.
+function decalTransform(part, horiz, vert, tatRot) {
+  // eslint-disable-next-line security/detect-object-injection -- part is a key from PARTS
+  const r = DECAL_SURFACE[part]
+
+  if (part === 'face') {
+    const lon = horiz * Math.PI * 0.35   // ±63° around the head
+    const lat = vert  * Math.PI * 0.28   // ±50° up / down
+    return {
+      position: [
+        r * Math.cos(lat) * Math.sin(lon),
+        r * Math.sin(lat),
+        r * Math.cos(lat) * Math.cos(lon),
+      ],
+      rotation: [-lat, lon, tatRot],
+    }
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- part is a key from PARTS
+  const halfLen = CAPSULE_HALF_LEN[part]
+  const theta = horiz * Math.PI * 0.9    // almost full wraparound
+  const yOff  = vert * halfLen * 0.85    // stay on the cylinder, off the caps
+  return {
+    position: [r * Math.sin(theta), yOff, r * Math.cos(theta)],
+    rotation: [0, theta, tatRot],
+  }
+}
+
 // ── Hook: turn the on-page peptide chain SVG into a Three.js texture ─────────
 // The chain is already being rendered (id="peptide-svg"). We clone that node,
 // strip its cream background so the raster has transparency, then rasterize
@@ -150,7 +191,7 @@ function CameraRig({ focusedPart }) {
 // The Decal is a child of the focused part's mesh — Drei walks up to find
 // the parent geometry and projects the peptide chain texture onto its
 // surface at the local-Z offset for that part's radius.
-function Mannequin({ color, focusedPart, tattooTexture, tattooRotation, tattooScale, showTattoo }) {
+function Mannequin({ color, focusedPart, tattooTexture, decalPosition, decalRotation, tattooScale, showTattoo }) {
   const matHero = useMemo(() => new MeshStandardMaterial({
     color, roughness: 0.78, metalness: 0,
     transparent: true, opacity: 1,
@@ -173,13 +214,10 @@ function Mannequin({ color, focusedPart, tattooTexture, tattooRotation, tattooSc
     ? tattooTexture.image.width / tattooTexture.image.height
     : 4
 
-  // eslint-disable-next-line security/detect-object-injection -- focusedPart is a key from PARTS
-  const surfaceZ = DECAL_SURFACE[focusedPart] ?? 0.05
-
   const decal = showTattoo && tattooTexture && (
     <Decal
-      position={[0, 0, surfaceZ]}
-      rotation={[0, 0, tattooRotation]}
+      position={decalPosition}
+      rotation={decalRotation}
       scale={[tattooScale * texAspect, tattooScale, 0.3]}
     >
       <meshStandardMaterial
@@ -278,9 +316,16 @@ export default function TattooPreview({ chain }) {
   const [toneIdx,     setToneIdx]     = useState(0)
   const [tatRot,      setTatRot]      = useState(0)     // degrees
   const [tatSize,     setTatSize]     = useState(0.08)  // decal "height" along surface
+  const [tatHoriz,    setTatHoriz]    = useState(0)     // -1..+1 around / longitude
+  const [tatVert,     setTatVert]     = useState(0)     // -1..+1 along  / latitude
 
   const tattooTexture = useChainTexture(chain)
   const hasChain = chain.some(aa => !aa.space)
+
+  const { position: decalPosition, rotation: decalRotation } = useMemo(
+    () => decalTransform(focusedPart, tatHoriz, tatVert, tatRot * Math.PI / 180),
+    [focusedPart, tatHoriz, tatVert, tatRot],
+  )
 
   // eslint-disable-next-line security/detect-object-injection -- toneIdx is a bounded index [0..3]
   const tone = SKIN_TONES[toneIdx]
@@ -337,7 +382,8 @@ export default function TattooPreview({ chain }) {
             color={tone.color}
             focusedPart={focusedPart}
             tattooTexture={tattooTexture}
-            tattooRotation={tatRot * Math.PI / 180}
+            decalPosition={decalPosition}
+            decalRotation={decalRotation}
             tattooScale={tatSize}
             showTattoo={hasChain}
           />
@@ -356,6 +402,18 @@ export default function TattooPreview({ chain }) {
 
       {/* Tattoo controls */}
       <div className="flex flex-col items-stretch gap-2 w-full max-w-xs">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-stone-500 w-14 text-right">Slide ←→</span>
+          <input type="range" min={-1} max={1} step={0.01} value={tatHoriz}
+                 onChange={e => setTatHoriz(Number(e.target.value))}
+                 className="flex-1 accent-stone-700" />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-stone-500 w-14 text-right">Slide ↑↓</span>
+          <input type="range" min={-1} max={1} step={0.01} value={tatVert}
+                 onChange={e => setTatVert(Number(e.target.value))}
+                 className="flex-1 accent-stone-700" />
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-stone-500 w-14 text-right">Rotate</span>
           <input type="range" min={-180} max={180} step={1} value={tatRot}
