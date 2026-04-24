@@ -88,69 +88,32 @@ function Mannequin({ color }) {
       </mesh>
 
       {/* ── Limbs (side = −1 left, +1 right) ── */}
+      {/* No joint spheres — capsule rounded ends overlap naturally at each joint. */}
+      {/* Upper arm/leg tops are buried inside the torso so they emerge cleanly.  */}
       {[-1, 1].map(side => (
         <group key={side}>
 
-          {/* Shoulder cap — bridges arm and torso */}
-          <mesh position={[side * 0.196, 1.443, 0]} material={mat}>
-            <sphereGeometry args={[0.064, 16, 16]} />
-          </mesh>
-
-          {/* Upper arm  (CapsuleGeometry: radius, cylinderLength, capSegs, radialSegs) */}
-          {/* total half-height = radius + length/2 = 0.050 + 0.085 = 0.135              */}
-          <mesh position={[side * 0.234, 1.307, 0]}
+          {/* Upper arm — top (shoulder end) sits inside the torso shoulder area */}
+          <mesh position={[side * 0.222, 1.320, 0]}
                 rotation={[0, 0, side * 0.24]} material={mat}>
             <capsuleGeometry args={[0.050, 0.17, 8, 16]} />
           </mesh>
 
-          {/* Elbow cap */}
-          <mesh position={[side * 0.266, 1.170, 0]} material={mat}>
-            <sphereGeometry args={[0.046, 14, 14]} />
-          </mesh>
-
-          {/* Lower arm */}
-          <mesh position={[side * 0.284, 1.046, 0]}
+          {/* Lower arm — top overlaps upper arm bottom at elbow; ends at wrist */}
+          <mesh position={[side * 0.271, 1.075, 0]}
                 rotation={[0, 0, side * 0.15]} material={mat}>
-            <capsuleGeometry args={[0.040, 0.15, 8, 16]} />
+            <capsuleGeometry args={[0.040, 0.18, 8, 16]} />
           </mesh>
 
-          {/* Hand — flattened oval, wider than tall */}
-          <mesh position={[side * 0.302, 0.908, 0]}
-                scale={[1.12, 0.66, 0.54]} material={mat}>
-            <sphereGeometry args={[0.052, 16, 12]} />
-          </mesh>
-
-          {/* Hip cap */}
-          <mesh position={[side * 0.108, 0.776, 0]} material={mat}>
-            <sphereGeometry args={[0.072, 16, 16]} />
-          </mesh>
-
-          {/* Upper leg — top penetrates torso slightly for clean join */}
-          <mesh position={[side * 0.107, 0.575, 0]}
+          {/* Upper leg — top buried in torso hip; slight outward lean */}
+          <mesh position={[side * 0.107, 0.620, 0]}
                 rotation={[0, 0, side * 0.04]} material={mat}>
             <capsuleGeometry args={[0.072, 0.22, 8, 16]} />
           </mesh>
 
-          {/* Knee cap */}
-          <mesh position={[side * 0.109, 0.380, 0]} material={mat}>
-            <sphereGeometry args={[0.060, 14, 14]} />
-          </mesh>
-
-          {/* Lower leg */}
-          <mesh position={[side * 0.109, 0.210, 0]} material={mat}>
-            <capsuleGeometry args={[0.050, 0.18, 8, 16]} />
-          </mesh>
-
-          {/* Ankle cap */}
-          <mesh position={[side * 0.109, 0.072, 0]} material={mat}>
-            <sphereGeometry args={[0.046, 14, 14]} />
-          </mesh>
-
-          {/* Foot — elongated egg shape, slight downward angle at toe */}
-          <mesh position={[side * 0.109, 0.052, 0.066]}
-                rotation={[0.20, 0, 0]}
-                scale={[1.0, 0.50, 2.10]} material={mat}>
-            <sphereGeometry args={[0.058, 16, 12]} />
+          {/* Lower leg — top overlaps upper leg bottom at knee; ends just above floor */}
+          <mesh position={[side * 0.109, 0.240, 0]} material={mat}>
+            <capsuleGeometry args={[0.050, 0.30, 8, 16]} />
           </mesh>
 
         </group>
