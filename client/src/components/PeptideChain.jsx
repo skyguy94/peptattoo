@@ -24,7 +24,7 @@ export default function PeptideChain({ chain }) {
         viewBox={`0 0 ${svgW} ${svgH}`}
         xmlns="http://www.w3.org/2000/svg"
         className="mx-auto block"
-        style={{ background: '#faf9f7', borderRadius: 10 }}
+        style={{ background: '#fbf6eb', borderRadius: 10 }}
       >
         <SvgSharedDefs />
         {n === 0 ? (

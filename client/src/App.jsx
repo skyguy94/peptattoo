@@ -4,6 +4,7 @@ import ExportButton from './components/ExportButton'
 import TattooPreview from './components/TattooPreview'
 import VirtualKeyboard from './components/VirtualKeyboard'
 import ChainFooter from './components/ChainFooter'
+import PeptideTicker from './components/PeptideTicker'
 import { textToAminoAcids } from './lib/aminoAcids'
 
 const DEFAULT_WORD = 'PEPTIDE'
@@ -20,23 +21,43 @@ export default function App() {
   const hasChain = chain.length > 0
 
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-900">
+    <div
+      className="min-h-screen text-stone-800"
+      style={{
+        // Warm cream page with a subtle dot grid — evokes a lab notebook
+        // without being loud. Dots are only ~6% opacity so they read as texture.
+        background: `
+          radial-gradient(circle at 1px 1px, rgba(80, 70, 55, 0.09) 1px, transparent 0) 0 0 / 22px 22px,
+          #f3ecdc
+        `,
+      }}
+    >
 
-      {/* Header */}
-      <div className="text-center pt-10 pb-6 px-4">
-        <h1 className="text-4xl font-bold tracking-tight mb-1.5"
-            style={{ fontFamily: 'Georgia, serif' }}>
+      {/* ── Masthead ── */}
+      <header className="text-center pt-12 pb-4 px-4">
+        <h1
+          className="font-bold text-stone-800 mb-2"
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: '2.75rem',
+            letterSpacing: '0.015em',
+          }}
+        >
           Peptattoo
         </h1>
-        <p className="text-stone-500 text-sm tracking-wide">
-          Type a word — every letter becomes its amino acid.
+        <p className="text-stone-500 text-sm italic max-w-md mx-auto"
+           style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+          Every letter is an amino acid — type a word and see the peptide it spells.
         </p>
-      </div>
+      </header>
 
-      {/* Body */}
-      <div className="flex gap-10 px-6 pb-20 max-w-screen-2xl mx-auto items-start flex-col xl:flex-row">
+      {/* ── Ticker — sample words rendered as scrolling peptide chains ── */}
+      <PeptideTicker />
 
-        {/* Left: chain + keyboard */}
+      {/* ── Body ── */}
+      <div className="flex gap-10 px-6 pt-8 pb-20 max-w-screen-2xl mx-auto items-start flex-col xl:flex-row">
+
+        {/* Left: chain output + keyboard + footnotes */}
         <div className="flex flex-col items-center gap-0 flex-1 min-w-0 w-full">
 
           {/* Chain output — always visible; sits above the keyboard like paper in a typewriter */}
@@ -57,7 +78,7 @@ export default function App() {
           <ChainFooter chain={chain} />
         </div>
 
-        {/* Right: arm preview (sticky sidebar) */}
+        {/* Right: 3D mannequin preview (sticky sidebar) */}
         {hasChain && (
           <div className="xl:sticky xl:top-8 xl:w-[400px] shrink-0 w-full">
             <TattooPreview chain={chain} />
