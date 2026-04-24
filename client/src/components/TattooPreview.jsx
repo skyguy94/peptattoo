@@ -327,7 +327,9 @@ export default function TattooPreview({ chain }) {
   const tattooTexture = useChainTexture(chain, showLetters)
   const aaLetters = chain.filter(aa => !aa.space).map(aa => aa.letter).join('')
   const hasChain = aaLetters.length > 0
-  const canShowKnuckles = aaLetters.length > 0 && aaLetters.length <= 8
+  // Knuckles mode is disabled for now — the stylized hand SVG isn't ready.
+  // To re-enable, restore: aaLetters.length > 0 && aaLetters.length <= 8
+  const canShowKnuckles = false
 
   // Treat focusedPart as intent; fall back to bicep if knuckles is no longer
   // a valid choice (chain grew past 8 letters or was emptied/filtered).
