@@ -1,37 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ConnectedChain, { CHAIN_H } from './ConnectedChain'
+import { SvgSharedDefs } from './chemistry'
 
-const ARM_W = 360
-const ARM_H = 200
+const SVG_W = 300
+const SVG_H = 560
 
-// Cylinder geometry
-const EL_CX = 52,  ARM_CY = 100, EL_RY = 50   // elbow (left)
-const WR_CX = 318, WR_RY  = 36                  // wrist (right, tapers)
-
-const EL_TOP = ARM_CY - EL_RY   // 50
-const EL_BOT = ARM_CY + EL_RY   // 150
-const WR_TOP = ARM_CY - WR_RY   // 64
-const WR_BOT = ARM_CY + WR_RY   // 136
-
-const ARM_BODY = [
-  `M ${EL_CX},${EL_TOP}`,
-  `C 160,42 255,60 ${WR_CX},${WR_TOP}`,
-  `L ${WR_CX},${WR_BOT}`,
-  `C 255,140 160,156 ${EL_CX},${EL_BOT}`,
-  'Z',
+// Front-view human silhouette, single clockwise outline path (300×560 space).
+// Order: head → right shoulder → right arm (outer↓ hand inner↑) → right torso →
+//        right leg → crotch → left leg → left torso → left arm (outer↓ hand inner↑) →
+//        left shoulder → neck → head.
+const FIGURE_PATH = [
+  'M 150,12',
+  'C 188,14 190,85 162,88',    // right side of head → chin-right
+  'C 164,94 172,110 172,116',  // neck right → collar right
+  'C 200,118 222,118 238,122', // right shoulder
+  'C 264,134 274,198 274,278', // outer right arm → elbow
+  'C 274,318 268,364 262,386', // right forearm → wrist outer
+  'C 259,396 247,396 243,384', // right hand
+  'C 241,364 240,318 240,278', // inner right arm up
+  'C 240,224 232,182 216,166', // up to right armpit
+  'C 210,186 204,246 200,294', // down right torso → waist
+  'C 200,326 212,344 214,350', // right hip
+  'C 214,396 212,468 210,536', // right outer leg → foot
+  'L 180,536',                 // right foot
+  'C 180,468 176,400 172,386', // up right inner leg
+  'C 166,362 156,352 150,374', // crotch right side
+  'C 144,352 134,362 128,386', // crotch left side
+  'C 124,400 120,468 120,536', // down left inner leg
+  'L 90,536',                  // left foot
+  'C 88,468 86,396 86,350',   // up left outer leg
+  'C 86,344 98,326 100,294',  // left hip → waist
+  'C 96,246 90,186 84,166',   // up left torso → armpit
+  'C 68,182 56,240 52,278',   // outer left arm → elbow
+  'C 52,318 56,364 60,386',   // left forearm → wrist outer
+  'C 62,396 76,396 78,384',   // left hand
+  'C 78,364 76,318 76,278',   // inner left arm up
+  'C 78,230 86,178 90,128',   // up to left shoulder inner
+  'C 92,120 110,118 140,112', // left shoulder → neck left
+  'C 140,106 138,96 138,88',  // neck left → chin left
+  'C 112,84 110,12 150,12 Z', // left side of head → top
 ].join(' ')
-
-// Tattoo sits on the dorsal (top-facing) surface of the cylinder
-const TATTOO_CY      = 73    // vertical center of dorsal surface
-const TATTOO_COMPRESS = 0.40  // vertical squish — simulates surface wrap
-
-// Real-world calibration
-const ARM_INNER_PX = 230
-const ARM_INNER_IN = 9.5
-
-const BOND_L = 28
-const DX     = BOND_L * Math.cos(35 * Math.PI / 180)
-const UNIT_W = 2 * DX + BOND_L
 
 const SKIN_TONES = [
   { label: 'Fair',   hi: '#fce8d2', mid: '#edcba0', lo: '#c49060' },
@@ -40,14 +48,59 @@ const SKIN_TONES = [
   { label: 'Dark',   hi: '#7a5040', mid: '#583028', lo: '#361808' },
 ]
 
+const BOND_L = 28
+const DX     = BOND_L * Math.cos(35 * Math.PI / 180)
+const UNIT_W = 2 * DX + BOND_L
+
 export default function TattooPreview({ chain }) {
   const aas = chain.filter(aa => !aa.space)
-  const [scale,   setScale]   = useState(0.44)
-  const [toneIdx, setToneIdx] = useState(0)
+
+  const [toneIdx, setToneIdx]   = useState(0)
+  const [scale, setScale]       = useState(0.28)
+  const [rotation, setRotation] = useState(0)
+  const [pos, setPos]           = useState({ x: 150, y: 260 })
+  const [dragging, setDragging] = useState(false)
+
+  const dragOffset = useRef({ x: 0, y: 0 })
+  const svgRef     = useRef(null)
+
+  useEffect(() => {
+    if (!dragging) return
+    const svg = svgRef.current
+
+    function getCoords(e) {
+      if (!svg) return { x: 0, y: 0 }
+      const rect   = svg.getBoundingClientRect()
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY
+      return {
+        x: (clientX - rect.left) * (SVG_W / rect.width),
+        y: (clientY - rect.top)  * (SVG_H / rect.height),
+      }
+    }
+
+    function onMove(e) {
+      e.preventDefault()
+      const c = getCoords(e)
+      setPos({ x: c.x - dragOffset.current.x, y: c.y - dragOffset.current.y })
+    }
+    function onUp() { setDragging(false) }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onUp)
+    }
+  }, [dragging])
 
   if (!aas.length) return null
 
-  // eslint-disable-next-line security/detect-object-injection -- toneIdx is a bounded array index [0..3]
+  // eslint-disable-next-line security/detect-object-injection -- toneIdx is a bounded index [0..3]
   const tone = SKIN_TONES[toneIdx]
 
   const chainNatW = (aas.length - 1) * UNIT_W + 2 * DX
@@ -55,14 +108,18 @@ export default function TattooPreview({ chain }) {
   const vW  = chainNatW + PAD * 2
   const vH  = CHAIN_H
 
-  const scaledW = vW * scale
-  const scaledH = vH * scale * TATTOO_COMPRESS
-
-  const svgX = (ARM_W - scaledW) / 2
-  const svgY = TATTOO_CY - scaledH / 2
-
-  const wIn = (chainNatW * scale) / ARM_INNER_PX * ARM_INNER_IN
-  const wCm = wIn * 2.54
+  function onPointerDown(e) {
+    e.preventDefault()
+    const svg = svgRef.current
+    if (!svg) return
+    const rect   = svg.getBoundingClientRect()
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    const x = (clientX - rect.left) * (SVG_W / rect.width)
+    const y = (clientY - rect.top)  * (SVG_H / rect.height)
+    dragOffset.current = { x: x - pos.x, y: y - pos.y }
+    setDragging(true)
+  }
 
   return (
     <div className="flex flex-col items-center gap-3 w-full">
@@ -70,107 +127,71 @@ export default function TattooPreview({ chain }) {
       <div className="text-center">
         <h2 className="text-base font-semibold text-stone-600 tracking-wide"
             style={{ fontFamily: 'Georgia, serif' }}>
-          Arm Preview
+          Body Preview
         </h2>
-        <p className="text-xs text-stone-400 mt-0.5">Approximate — drag to resize</p>
+        <p className="text-xs text-stone-400 mt-0.5">Drag to position · resize and rotate below</p>
       </div>
 
-      <svg width={ARM_W} height={ARM_H}
-           viewBox={`0 0 ${ARM_W} ${ARM_H}`}
-           className="mx-auto block"
-           style={{ borderRadius: 12, background: '#ede8df' }}
-           xmlns="http://www.w3.org/2000/svg">
+      <svg
+        ref={svgRef}
+        width={SVG_W} height={SVG_H}
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        className="mx-auto block"
+        style={{ borderRadius: 12, background: '#ede8df', touchAction: 'none' }}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <SvgSharedDefs />
+
         <defs>
-          {/* Cylindrical shading: lit from directly above */}
-          <linearGradient id="prv3-body"
-                          x1="0" y1={EL_TOP} x2="0" y2={EL_BOT}
+          <linearGradient id="prv-body" x1="0" y1="12" x2="0" y2="536"
                           gradientUnits="userSpaceOnUse">
             <stop offset="0%"   stopColor={tone.hi} />
             <stop offset="28%"  stopColor={tone.mid} />
-            <stop offset="78%"  stopColor={tone.mid} stopOpacity="0.88" />
             <stop offset="100%" stopColor={tone.lo} />
           </linearGradient>
-
-          {/* Elbow end-cap: radial — slightly lighter in center */}
-          <radialGradient id="prv3-el"
-                          cx={EL_CX} cy={ARM_CY} r={EL_RY}
-                          gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stopColor={tone.mid} stopOpacity="0.55" />
-            <stop offset="100%" stopColor={tone.lo}  stopOpacity="1" />
-          </radialGradient>
-
-          {/* Wrist end-cap */}
-          <radialGradient id="prv3-wr"
-                          cx={WR_CX} cy={ARM_CY} r={WR_RY}
-                          gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stopColor={tone.mid} stopOpacity="0.6" />
-            <stop offset="100%" stopColor={tone.lo}  stopOpacity="1" />
-          </radialGradient>
-
-          <filter id="prv3-shadow" x="-25%" y="-50%" width="150%" height="250%">
-            <feGaussianBlur stdDeviation="7" />
+          <filter id="prv-shadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6" />
           </filter>
         </defs>
 
         {/* Ground shadow */}
-        <ellipse cx={ARM_W / 2} cy={ARM_H - 10} rx="152" ry="14"
-                 fill="rgba(0,0,0,0.20)" filter="url(#prv3-shadow)" />
+        <ellipse cx={150} cy={SVG_H - 8} rx={58} ry={9}
+                 fill="rgba(0,0,0,0.18)" filter="url(#prv-shadow)" />
 
-        {/* Arm body */}
-        <path d={ARM_BODY} fill="url(#prv3-body)" />
-        <path d={ARM_BODY} fill="none" stroke={tone.lo} strokeWidth={1.5} opacity={0.30} />
+        {/* Body silhouette */}
+        <path d={FIGURE_PATH}
+              fill="url(#prv-body)"
+              stroke={tone.lo} strokeWidth={1.2} />
 
-        {/* Wrist end-cap */}
-        <ellipse cx={WR_CX} cy={ARM_CY} rx={14} ry={WR_RY}
-                 fill="url(#prv3-wr)" stroke={tone.lo} strokeWidth={1} />
-
-        {/* Elbow end-cap */}
-        <ellipse cx={EL_CX} cy={ARM_CY} rx={18} ry={EL_RY}
-                 fill="url(#prv3-el)" stroke={tone.lo} strokeWidth={1} />
-
-        {/* Broad highlight band on dorsal ridge */}
-        <path d={`M ${EL_CX+5},${EL_TOP+7} C 165,44 255,62 ${WR_CX-5},${WR_TOP+7}`}
-              fill="none" stroke={tone.hi}
-              strokeWidth="16" strokeLinecap="round" opacity="0.30" />
-
-        {/* Tight specular streak */}
-        <path d={`M ${EL_CX+6},${EL_TOP+9} C 165,47 255,64 ${WR_CX-6},${WR_TOP+9}`}
-              fill="none" stroke="rgba(255,255,255,0.62)"
-              strokeWidth="3" strokeLinecap="round" />
-
-        {/* Tattoo — vertically compressed onto dorsal surface */}
-        <g opacity={0.92}>
-          <svg x={svgX} y={svgY}
-               width={scaledW} height={scaledH}
-               viewBox={`0 0 ${vW} ${vH}`}
-               preserveAspectRatio="none"
-               overflow="visible">
-            <ConnectedChain
-              aas={aas}
-              svgWidth={vW}
-              sectionY={0}
-              inputText=""
-            />
-          </svg>
+        {/* Tattoo — drag to reposition */}
+        <g
+          onMouseDown={onPointerDown}
+          onTouchStart={onPointerDown}
+          style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+          transform={`translate(${pos.x} ${pos.y}) rotate(${rotation})`}
+          opacity={0.90}
+        >
+          <g transform={`scale(${scale}) translate(${-vW / 2} ${-vH / 2})`}>
+            <ConnectedChain aas={aas} svgWidth={vW} sectionY={0} />
+          </g>
         </g>
       </svg>
 
       {/* Controls */}
       <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-        <span className="text-xs font-medium text-stone-600 tabular-nums">
-          {wCm.toFixed(1)} cm&nbsp;/&nbsp;{wIn.toFixed(1)}&Prime; wide
-        </span>
-
         <div className="flex items-center gap-2 w-full">
-          <span className="text-xs text-stone-400">S</span>
-          <input type="range" min={0.15} max={1.0} step={0.01}
-                 value={scale}
-                 onChange={e => setScale(Number(e.target.value))}
+          <span className="text-xs text-stone-400 w-10 text-right">Size</span>
+          <input type="range" min={0.10} max={0.70} step={0.01}
+                 value={scale} onChange={e => setScale(Number(e.target.value))}
                  className="flex-1 accent-stone-700" />
-          <span className="text-xs text-stone-400">L</span>
         </div>
-
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 w-full">
+          <span className="text-xs text-stone-400 w-10 text-right">Rotate</span>
+          <input type="range" min={-180} max={180} step={1}
+                 value={rotation} onChange={e => setRotation(Number(e.target.value))}
+                 className="flex-1 accent-stone-700" />
+        </div>
+        <div className="flex items-center gap-2.5 mt-1">
           <span className="text-xs text-stone-500">Skin</span>
           {SKIN_TONES.map((t, i) => (
             <button key={t.label} title={t.label}
@@ -183,6 +204,7 @@ export default function TattooPreview({ chain }) {
           ))}
         </div>
       </div>
+
     </div>
   )
 }
