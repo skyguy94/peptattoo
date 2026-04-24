@@ -5,6 +5,7 @@ import TattooPreview from './components/TattooPreview'
 import VirtualKeyboard from './components/VirtualKeyboard'
 import ChainFooter from './components/ChainFooter'
 import PeptideTicker from './components/PeptideTicker'
+import BrandFooter from './components/BrandFooter'
 import { textToAminoAcids } from './lib/aminoAcids'
 import { containsProfanity } from './lib/contentFilter'
 
@@ -93,6 +94,9 @@ export default function App() {
 
       {/* ── Ticker — sample words rendered as scrolling peptide chains ── */}
       <PeptideTicker />
+
+      {/* ── Brand footer ── */}
+      <BrandFooter />
 
     </div>
   )
