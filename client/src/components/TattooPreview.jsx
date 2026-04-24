@@ -7,6 +7,7 @@ import {
   CanvasTexture,
   SRGBColorSpace,
 } from 'three'
+import KnucklesView from './KnucklesView'
 
 // ── Torso profile (unchanged) ─────────────────────────────────────────────────
 const TORSO_PROFILE = [
@@ -324,11 +325,23 @@ export default function TattooPreview({ chain }) {
   const [showLetters, setShowLetters] = useState(false) // letters visible on tattoo
 
   const tattooTexture = useChainTexture(chain, showLetters)
-  const hasChain = chain.some(aa => !aa.space)
+  const aaLetters = chain.filter(aa => !aa.space).map(aa => aa.letter).join('')
+  const hasChain = aaLetters.length > 0
+  const canShowKnuckles = aaLetters.length > 0 && aaLetters.length <= 8
+
+  // Treat focusedPart as intent; fall back to bicep if knuckles is no longer
+  // a valid choice (chain grew past 8 letters or was emptied/filtered).
+  const effectivePart = (focusedPart === 'knuckles' && !canShowKnuckles)
+    ? 'bicep'
+    : focusedPart
+  const isKnuckles = effectivePart === 'knuckles'
 
   const { position: decalPosition, rotation: decalRotation } = useMemo(
-    () => decalTransform(focusedPart, tatHoriz, tatVert, tatRot * Math.PI / 180),
-    [focusedPart, tatHoriz, tatVert, tatRot],
+    () => decalTransform(
+      isKnuckles ? 'bicep' : effectivePart,
+      tatHoriz, tatVert, tatRot * Math.PI / 180,
+    ),
+    [effectivePart, isKnuckles, tatHoriz, tatVert, tatRot],
   )
 
   // eslint-disable-next-line security/detect-object-injection -- toneIdx is a bounded index [0..3]
@@ -364,47 +377,64 @@ export default function TattooPreview({ chain }) {
           <button key={key}
                   onClick={() => setFocusedPart(key)}
                   className={`px-3 py-1 rounded text-xs tracking-wide transition-colors border ${
-                    focusedPart === key
+                    effectivePart === key
                       ? 'bg-stone-700 text-white border-stone-700'
                       : 'bg-white text-stone-600 border-stone-300 hover:border-stone-500'
                   }`}>
             {cfg.label}
           </button>
         ))}
+        {canShowKnuckles && (
+          <button
+            onClick={() => setFocusedPart('knuckles')}
+            className={`px-3 py-1 rounded text-xs tracking-wide transition-colors border ${
+              effectivePart === 'knuckles'
+                ? 'bg-stone-700 text-white border-stone-700'
+                : 'bg-white text-stone-600 border-stone-300 hover:border-stone-500'
+            }`}
+          >
+            Knuckles
+          </button>
+        )}
       </div>
 
-      {/* 3D canvas */}
+      {/* View — 3D mannequin for body parts, 2D hands for knuckles */}
       <div className="w-full rounded-xl overflow-hidden" style={{ height: 400 }}>
-        <Canvas camera={{ position: initCam, fov: 45 }}>
-          <color attach="background" args={['#ede8df']} />
+        {isKnuckles ? (
+          <KnucklesView letters={aaLetters} skinColor={tone.color} />
+        ) : (
+          <Canvas camera={{ position: initCam, fov: 45 }}>
+            <color attach="background" args={['#ede8df']} />
 
-          <ambientLight intensity={0.52} />
-          <directionalLight position={[2,   4,  2]}  intensity={0.88} />
-          <directionalLight position={[-1.5, 2, -1]} intensity={0.26} />
+            <ambientLight intensity={0.52} />
+            <directionalLight position={[2,   4,  2]}  intensity={0.88} />
+            <directionalLight position={[-1.5, 2, -1]} intensity={0.26} />
 
-          <Mannequin
-            color={tone.color}
-            focusedPart={focusedPart}
-            tattooTexture={tattooTexture}
-            decalPosition={decalPosition}
-            decalRotation={decalRotation}
-            tattooScale={tatSize}
-            showTattoo={hasChain}
-          />
+            <Mannequin
+              color={tone.color}
+              focusedPart={effectivePart}
+              tattooTexture={tattooTexture}
+              decalPosition={decalPosition}
+              decalRotation={decalRotation}
+              tattooScale={tatSize}
+              showTattoo={hasChain}
+            />
 
-          <ContactShadows
-            position={[0, 0.001, 0]}
-            opacity={0.32}
-            scale={2}
-            blur={1.6}
-            far={1.2}
-          />
+            <ContactShadows
+              position={[0, 0.001, 0]}
+              opacity={0.32}
+              scale={2}
+              blur={1.6}
+              far={1.2}
+            />
 
-          <CameraRig focusedPart={focusedPart} />
-        </Canvas>
+            <CameraRig focusedPart={effectivePart} />
+          </Canvas>
+        )}
       </div>
 
-      {/* Tattoo controls */}
+      {/* Tattoo controls — only meaningful for the 3D decal views */}
+      {!isKnuckles && (
       <div className="flex flex-col items-stretch gap-2 w-full max-w-xs">
         <div className="flex items-center gap-3">
           <span className="text-xs text-stone-500 w-14 text-right">Slide ←→</span>
@@ -441,6 +471,7 @@ export default function TattooPreview({ chain }) {
           Show letters on tattoo
         </label>
       </div>
+      )}
 
       {/* Skin tone */}
       <div className="flex items-center gap-2.5">
