@@ -1,0 +1,20 @@
+# Cloudflare _headers file for Peptattoo.
+# Syntax: path pattern, then indented "Header-Name: value" lines.
+# This file is copied verbatim from client/public/ to client/dist/ by Vite
+# and picked up by Cloudflare Workers Static Assets on deploy.
+
+# ── Default security headers for every response ─────────────────────────────
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+
+# ── Long-lived cache for hashed Vite assets ─────────────────────────────────
+# Filenames include a content hash, so these are safe to cache immutably
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
