@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Design {
+  id        String   @id @default(cuid())
+  text      String
+  svgData   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
